@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Raio-X das Wallets</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Comparativo aberto de hardware wallets, hot wallets e exchanges: código aberto, recursos e incidentes de segurança com fonte.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: ficha técnica — cabeçalho curto, abas, filtros, tabela com 1ª coluna fixa, gaveta de incidentes com fontes */
+:root{
+  --bg:#eef1f3; --paper:#ffffff; --ink:#132029; --muted:#5b6b76; --line:#d5dde2;
+  --accent:#e8890c; --accent-ink:#7a4300; --sel:#132029; --sel-ink:#ffffff;
+  --ok:#1d8a4e; --ok-bg:#e1f3e8; --bad:#c2352b; --bad-bg:#fbe5e3; --mid:#a86a00; --mid-bg:#fdf0d9; --unk:#7d8a93; --unk-bg:#eceff1;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e161c; --paper:#16212a; --ink:#e4ebef; --muted:#93a3ae; --line:#26343e;
+  --accent:#f4a033; --accent-ink:#f8c27a; --sel:#e4ebef; --sel-ink:#0e161c;
+  --ok:#4cc483; --ok-bg:#163526; --bad:#ef6b60; --bad-bg:#3a1c1a; --mid:#e8b04a; --mid-bg:#382a10; --unk:#8494a0; --unk-bg:#1f2b34; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e161c; --paper:#16212a; --ink:#e4ebef; --muted:#93a3ae; --line:#26343e;
+  --accent:#f4a033; --accent-ink:#f8c27a; --sel:#e4ebef; --sel-ink:#0e161c;
+  --ok:#4cc483; --ok-bg:#163526; --bad:#ef6b60; --bad-bg:#3a1c1a; --mid:#e8b04a; --mid-bg:#382a10; --unk:#8494a0; --unk-bg:#1f2b34; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px;display:grid;gap:20px}
+header{display:grid;gap:6px}
+.kicker{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink)}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(30px,6vw,46px);line-height:1.02;margin:0;text-wrap:balance;letter-spacing:-.01em}
+.lede{margin:0;color:var(--muted);max-width:62ch}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{font:600 14px var(--f-body);border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:9px 14px;border-radius:999px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--sel);color:var(--sel-ink);border-color:var(--sel)}
+.tab:focus-visible,.chip:focus-visible,button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.search{flex:1 1 200px;min-width:0;font:15px var(--f-body);padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink)}
+.chip{font:500 13px var(--f-body);border:1px dashed var(--line);background:transparent;color:var(--muted);padding:7px 11px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{border-style:solid;border-color:var(--accent);color:var(--ink);background:var(--paper)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.scroller{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:14px}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:640px}
+th,td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
+thead th{font:600 12px var(--f-body);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--paper);position:sticky;top:0}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--paper);z-index:1;min-width:150px}
+tbody tr:last-child td{border-bottom:0}
+tbody tr.row{cursor:pointer}
+tbody tr.row:hover td{background:var(--bg)}
+.name{font-weight:600}
+.sub{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.spon td{background:color-mix(in srgb,var(--accent) 8%,var(--paper))}
+.badge{display:inline-block;font:500 10px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);border:1px solid var(--accent);border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:2px}
+.slot td{color:var(--muted);font-size:13px;text-align:left;border-bottom:1px dashed var(--line)}
+.c{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;font:600 14px var(--f-mono)}
+.c.s{background:var(--ok-bg);color:var(--ok)}
+.c.n{background:var(--bad-bg);color:var(--bad)}
+.c.p{background:var(--mid-bg);color:var(--mid)}
+.c.u{background:var(--unk-bg);color:var(--unk)}
+.c.note{position:relative}
+.c.note::after{content:"";position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.6}
+.cnt{font:600 14px var(--f-mono);font-variant-numeric:tabular-nums;padding:4px 9px;border-radius:999px;display:inline-block;min-width:34px}
+.cnt.z{background:var(--ok-bg);color:var(--ok)}
+.cnt.h{background:var(--bad-bg);color:var(--bad)}
+.detail td{background:var(--bg);text-align:left;padding:14px 16px}
+.detail ul{margin:0;padding:0;list-style:none;display:grid;gap:12px}
+.inc{display:grid;gap:2px;max-width:70ch}
+.inc b{font-weight:600}
+.inc small{color:var(--muted);font-family:var(--f-mono);font-size:12px}
+.inc a{color:var(--accent-ink)}
+.notes{margin:0 0 10px;padding-left:18px;color:var(--muted);font-size:14px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+footer{font-size:13px;color:var(--muted);display:grid;gap:6px;max-width:75ch}
+footer b{color:var(--ink)}
+@media (prefers-reduced-motion:no-preference){.detail td{animation:in .18s ease-out}@keyframes in{from{opacity:.4}to{opacity:1}}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">Comparativo aberto · atualizado em out/2026</div>
+    <h1>Raio-X das Wallets</h1>
+    <p class="lede">Hardware wallets, hot wallets e onde comprar cripto, lado a lado. Todo incidente listado tem fonte: toque na linha para ver.</p>
+  </header>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <div class="tools">
+    <input class="search" id="q" type="search" placeholder="Buscar pelo nome…" aria-label="Buscar pelo nome">
+    <button class="chip" id="f-os" aria-pressed="false">Só código aberto</button>
+    <button class="chip" id="f-roubo" aria-pressed="false">Sem roubo registrado</button>
+  </div>
+
+  <div class="legend" aria-label="Legenda">
+    <span><i class="c s">✓</i>Sim</span>
+    <span><i class="c n">✕</i>Não</span>
+    <span><i class="c p">◐</i>Parcial</span>
+    <span><i class="c u">?</i>Não verificado</span>
+    <span><i class="c s note">✓</i>Tem observação (toque na linha)</span>
+  </div>
+
+  <div class="scroller"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+
+  <footer>
+    <p><b>Como ler os incidentes.</b> “0” significa nenhum caso registrado nesta base até a data acima, não uma garantia. Vazamentos de dados de clientes contam como incidente da marca, mesmo sem afetar o aparelho.</p>
+    <p><b>Patrocinados</b> aparecem no topo de cada aba e são sempre identificados. Patrocínio não altera nenhuma célula da tabela.</p>
+    <p>Encontrou um erro ou tem uma fonte nova? Abra uma issue no repositório do projeto.</p>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   DADOS — edite aqui. Valores das células:
+   "s" sim · "n" não · "p" parcial · "u" não verificado
+   Para observação: ["s","texto da observação"]
+   incidentes: tipo "roubo" (perda de fundos) ou "vazamento" (dados/falha)
+   patrocinado: true → vai para o topo com selo
+   ============================================================ */
+const INC = {
+  ledger2020:{tipo:"vazamento",data:"jun/2020 (divulgado dez/2020)",titulo:"Vazamento da base de e-commerce",resumo:"Base de clientes vazou; mais de 270 mil endereços físicos e telefones publicados em fórum hacker. Os aparelhos não foram afetados.",fontes:[["The Block","https://www.theblock.co/linked/88596/database-containing-personal-information-of-over-270000-ledger-customers-released-on-raidforums"],["Decrypt","https://decrypt.co/52118/hacked-ledger-database-dumped-on-raidforums"]]},
+  ledger2023:{tipo:"roubo",data:"dez/2023",titulo:"Ataque à biblioteca Ledger Connect Kit",resumo:"Conta de ex-funcionário foi alvo de phishing e versões maliciosas da biblioteca drenaram ao menos US$ 600 mil de usuários de dApps. O aparelho em si não foi comprometido.",fontes:[["The Block","https://www.theblock.co/post/267614/ledger-connectkit-library-security-flaw-dapps-compromised"],["SlowMist","https://slowmist.medium.com/supply-chain-attack-on-ledger-connect-kit-analyzing-the-impact-and-preventive-measures-1005e39422fd"]]},
+  trezor2020:{tipo:"vazamento",data:"jan/2020",titulo:"Extração da seed com acesso físico (Trezor One e Model T)",resumo:"Kraken Security Labs extraiu a seed via voltage glitching com cerca de 15 minutos de acesso físico. Mitigação: passphrase.",fontes:[["Kraken Blog","https://blog.kraken.com/post/3662/kraken-identifies-critical-flaw-in-trezor-hardware-wallets"]]},
+  trezor2024:{tipo:"vazamento",data:"jan/2024",titulo:"Invasão do portal de suporte terceirizado",resumo:"Nomes e e-mails de até 66 mil contatos do suporte expostos; tentativas de phishing atingiram 41 usuários. Sem perda de fundos relatada.",fontes:[["Trezor Blog","https://blog.trezor.io/trezor-security-update-stay-vigilant-against-potential-phishing-attack-bb05015a21f8"]]},
+  electrum2018:{tipo:"roubo",data:"dez/2018 – 2019",titulo:"Phishing via servidores maliciosos",resumo:"Servidores falsos exibiam aviso de ‘atualização’ que levava a uma versão adulterada da carteira; estimativas de centenas de BTC perdidos.",fontes:[["Malwarebytes","https://www.malwarebytes.com/blog/news/2019/04/electrum-bitcoin-wallets-under-siege"],["SC Media","https://scworld.com/news/electrum-wallet-phishing-and-malware-attacks-net-more-than-750000-in-bitcoin"]]},
+  atomic2023:{tipo:"roubo",data:"jun/2023",titulo:"Drenagem de carteiras de usuários",resumo:"Mais de US$ 100 milhões levados de milhares de carteiras; ataque atribuído ao grupo Lazarus. Causa raiz não divulgada pela empresa.",fontes:[["ForkLog","https://forklog.com/en/atomic-wallet-hack-losses-exceed-100-million/"],["BankInfoSecurity","https://www.bankinfosecurity.net/cryptohack-roundup-100-million-atomic-wallet-heist-a-22309"]]},
+  trust2025:{tipo:"roubo",data:"dez/2025",titulo:"Extensão de navegador adulterada (v2.68)",resumo:"Versão maliciosa da extensão para Chrome drenou entre US$ 7 e 8,5 milhões; empresa prometeu reembolso. App de celular não afetado.",fontes:[["The Block","https://www.theblock.co/post/383735/trust-wallet-extension-incident"],["ForkLog","https://forklog.com/en/news/trust-wallet-reveals-details-of-8-5-million-hack"]]},
+  binance2019:{tipo:"roubo",data:"mai/2019",titulo:"7.000 BTC retirados da hot wallet",resumo:"Atacantes obtiveram chaves de API e códigos 2FA de usuários e sacaram 7.000 BTC; perdas cobertas pelo fundo SAFU.",fontes:[["Security Intelligence","https://securityintelligence.com/news/binance-hack-steals-41-million-from-hot-wallet"]]},
+  bybit2025:{tipo:"roubo",data:"fev/2025",titulo:"US$ 1,5 bilhão em ETH de cold wallet",resumo:"Maior roubo da história do setor; atribuído pelo FBI à Coreia do Norte. A corretora cobriu as perdas com empréstimos.",fontes:[["Wikipedia","https://en.wikipedia.org/wiki/Bybit"],["Bloomberg","https://www.bloomberg.com/news/articles/2025-02-21/bybit-says-exchange-wallet-hacked-1-5-billion-estimated-loss"]]},
+  coinbase2025:{tipo:"vazamento",data:"mai/2025",titulo:"Funcionários de suporte subornados vazaram dados",resumo:"Dados de cerca de 69 mil clientes copiados por atendentes terceirizados; golpistas usaram os dados para engenharia social.",fontes:[["Help Net Security","https://www.helpnetsecurity.com/2025/05/15/coinbase-suffers-data-breach-gets-extorted/"],["The Hacker News","https://thehackernews.com/2025/05/coinbase-agents-bribed-data-of-1-users.html"]]}
+};
+
+const CATS = [
+  {id:"hw",nome:"Hardware wallets",
+   crit:[["os","Código aberto"],["btc","Versão só Bitcoin"],["se","Secure Element"],["air","Air-gap"]],
+   itens:[
+    {nome:"BitBox02",sub:"Shift Crypto",os:"s",btc:["s","Edição Bitcoin-only à venda"],se:"s",air:"n",inc:[]},
+    {nome:"Coldcard Mk4",sub:"Coinkite",os:["p","Código público (source-available), licença não é OSI"],btc:"s",se:"s",air:["s","MicroSD / NFC"],inc:[]},
+    {nome:"Coldcard Q",sub:"Coinkite",os:["p","Código público (source-available), licença não é OSI"],btc:"s",se:"s",air:["s","QR / MicroSD / NFC"],inc:[]},
+    {nome:"Jade",sub:"Blockstream",os:"s",btc:["p","Bitcoin e Liquid"],se:["n","Usa ‘secure element virtual’ via servidor oráculo"],air:["s","QR pela câmera"],inc:[]},
+    {nome:"Keystone 3 Pro",sub:"Keystone",os:"s",btc:["s","Firmware Bitcoin-only opcional"],se:"s",air:["s","QR"],inc:[]},
+    {nome:"Krux",sub:"DIY",os:"s",btc:"s",se:["n","Sem estado: a seed não fica salva"],air:["s","QR"],inc:[]},
+    {nome:"Ledger Flex",sub:"Ledger",os:["n","Firmware do secure element fechado"],btc:"n",se:"s",air:"n",inc:["ledger2020","ledger2023"]},
+    {nome:"Ledger Nano S Plus",sub:"Ledger",os:["n","Firmware do secure element fechado"],btc:"n",se:"s",air:"n",inc:["ledger2020","ledger2023"]},
+    {nome:"Ledger Nano X",sub:"Ledger",os:["n","Firmware do secure element fechado"],btc:"n",se:"s",air:["n","USB e Bluetooth"],inc:["ledger2020","ledger2023"]},
+    {nome:"Ledger Stax",sub:"Ledger",os:["n","Firmware do secure element fechado"],btc:"n",se:"s",air:"n",inc:["ledger2020","ledger2023"]},
+    {nome:"Passport",sub:"Foundation",os:"s",btc:"s",se:"s",air:["s","QR / MicroSD"],inc:[]},
+    {nome:"SeedSigner",sub:"DIY",os:"s",btc:"s",se:["n","Sem estado: a seed não fica salva"],air:["s","QR"],inc:[]},
+    {nome:"Tangem",sub:"Tangem",os:"u",btc:"n",se:"s",air:["n","Assina via NFC com o celular; sem tela própria"],inc:[]},
+    {nome:"Trezor Model One / T",sub:"Trezor · linha antiga",os:"s",btc:"s",se:["n","Sem secure element"],air:"n",inc:["trezor2020","trezor2024"]},
+    {nome:"Trezor Safe 3",sub:"Trezor",os:["s","Firmware aberto; chip do secure element é fechado"],btc:"s",se:"s",air:"n",inc:["trezor2024"]},
+    {nome:"Trezor Safe 5",sub:"Trezor",os:["s","Firmware aberto; chip do secure element é fechado"],btc:"s",se:"s",air:"n",inc:["trezor2024"]}
+   ]},
+  {id:"hot",nome:"Hot wallets",
+   crit:[["os","Código aberto"],["self","Autocustódia"],["ln","Lightning"],["btc","Só Bitcoin"]],
+   itens:[
+    {nome:"Aqua",sub:"Celular",os:"s",self:"s",ln:["p","Lightning via swap"],btc:["n","Também Liquid e USDT"],inc:[]},
+    {nome:"Atomic Wallet",sub:"Celular / desktop",os:"n",self:"s",ln:"n",btc:"n",inc:["atomic2023"]},
+    {nome:"Blockstream App",sub:"Antiga Green",os:"s",self:"s",ln:"u",btc:["p","Bitcoin e Liquid"],inc:[]},
+    {nome:"BlueWallet",sub:"Celular",os:"s",self:"s",ln:"u",btc:"s",inc:[]},
+    {nome:"Electrum",sub:"Desktop / Android",os:"s",self:"s",ln:"s",btc:"s",inc:["electrum2018"]},
+    {nome:"Exodus",sub:"Celular / desktop",os:"n",self:"s",ln:"n",btc:"n",inc:[]},
+    {nome:"MetaMask",sub:"Extensão / celular",os:["p","Código público com licença restritiva"],self:"s",ln:"n",btc:"n",inc:[]},
+    {nome:"Muun",sub:"Celular",os:"s",self:"s",ln:"s",btc:"s",inc:[]},
+    {nome:"Phoenix",sub:"ACINQ · celular",os:"s",self:"s",ln:"s",btc:"s",inc:[]},
+    {nome:"Sparrow",sub:"Desktop",os:"s",self:"s",ln:"n",btc:"s",inc:[]},
+    {nome:"Trust Wallet",sub:"Celular / extensão",os:["p","Biblioteca wallet-core aberta; app não"],self:"s",ln:"n",btc:"n",inc:["trust2025"]}
+   ]},
+  {id:"buy",nome:"Onde comprar",
+   crit:[["nokyc","Sem KYC"],["pix","Aceita PIX"],["onchain","Saque on-chain"],["ln","Saque Lightning"]],
+   itens:[
+    {nome:"Binance",sub:"Corretora",nokyc:"n",pix:"s",onchain:"s",ln:"s",inc:["binance2019"]},
+    {nome:"Bisq",sub:"P2P descentralizado",nokyc:"s",pix:["p","Depende da oferta do vendedor"],onchain:"s",ln:"n",inc:[]},
+    {nome:"Bitso",sub:"Corretora",nokyc:"n",pix:"s",onchain:"s",ln:"u",inc:[]},
+    {nome:"Bybit",sub:"Corretora",nokyc:"n",pix:"u",onchain:"s",ln:"u",inc:["bybit2025"]},
+    {nome:"Coinbase",sub:"Corretora",nokyc:"n",pix:"u",onchain:"s",ln:"s",inc:["coinbase2025"]},
+    {nome:"Foxbit",sub:"Corretora",nokyc:"n",pix:"s",onchain:"s",ln:"u",inc:[]},
+    {nome:"Mercado Bitcoin",sub:"Corretora",nokyc:"n",pix:"s",onchain:"s",ln:"u",inc:[]},
+    {nome:"RoboSats",sub:"P2P via Lightning",nokyc:"s",pix:["p","Depende da oferta do vendedor"],onchain:["p","Via swap"],ln:"s",inc:[]}
+   ]}
+];
+
+/* ---------- interface ---------- */
+const SYM={s:"✓",n:"✕",p:"◐",u:"?"};
+const LBL={s:"Sim",n:"Não",p:"Parcial",u:"Não verificado"};
+const st={cat:"hw",q:"",os:false,semRoubo:false,aberto:null};
+try{const t=localStorage.getItem("rx-tab");if(CATS.some(c=>c.id===t))st.cat=t}catch(e){}
+const hash=location.hash.slice(1);if(CATS.some(c=>c.id===hash))st.cat=hash;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const val=v=>Array.isArray(v)?v[0]:(v||"u");
+const nota=v=>Array.isArray(v)?v[1]:"";
+const contar=(it,tipo)=>it.inc.filter(k=>INC[k].tipo===tipo).length;
+
+function abas(){
+  $("#tabs").innerHTML=CATS.map(c=>`<button class="tab" role="tab" aria-selected="${c.id===st.cat}" data-id="${c.id}">${c.nome}</button>`).join("");
+}
+function render(){
+  const cat=CATS.find(c=>c.id===st.cat);
+  const cols=cat.crit.length+3;
+  $("#tbl thead").innerHTML=`<tr><th scope="col">Nome</th>${cat.crit.map(c=>`<th scope="col">${c[1]}</th>`).join("")}<th scope="col">Vazamentos e falhas</th><th scope="col">Roubos de fundos</th></tr>`;
+  let itens=cat.itens.filter(it=>it.nome.toLowerCase().includes(st.q));
+  if(st.os) itens=itens.filter(it=>!it.os||val(it.os)==="s"||val(it.os)==="p");
+  if(st.semRoubo) itens=itens.filter(it=>contar(it,"roubo")===0);
+  itens.sort((a,b)=>(b.patrocinado?1:0)-(a.patrocinado?1:0)||a.nome.localeCompare(b.nome,"pt"));
+  let h="";
+  if(!cat.itens.some(i=>i.patrocinado)) h+=`<tr class="slot"><td colspan="${cols}"><span class="badge" style="margin:0 8px 0 0">Patrocinado</span>Espaço disponível para patrocínio nesta categoria.</td></tr>`;
+  if(!itens.length) h+=`<tr><td colspan="${cols}" class="empty">Nenhum item com esses filtros.</td></tr>`;
+  for(const it of itens){
+    const key=cat.id+"|"+it.nome, open=st.aberto===key;
+    const v=contar(it,"vazamento"), r=contar(it,"roubo");
+    h+=`<tr class="row${it.patrocinado?" spon":""}" data-k="${esc(key)}" tabindex="0" aria-expanded="${open}">
+      <td><span class="name">${esc(it.nome)}</span>${it.patrocinado?'<span class="badge">Patrocinado</span>':""}<span class="sub">${esc(it.sub||"")}</span></td>
+      ${cat.crit.map(([k,l])=>{const x=val(it[k]);return `<td><i class="c ${x}${nota(it[k])?" note":""}" title="${esc(l+": "+LBL[x]+(nota(it[k])?" — "+nota(it[k]):""))}" aria-label="${esc(LBL[x])}">${SYM[x]}</i></td>`}).join("")}
+      <td><span class="cnt ${v?"h":"z"}">${v}</span></td><td><span class="cnt ${r?"h":"z"}">${r}</span></td></tr>`;
+    if(open){
+      const ns=cat.crit.filter(([k])=>nota(it[k])).map(([k,l])=>`<li><b>${esc(l)}:</b> ${esc(nota(it[k]))}</li>`).join("");
+      const incs=it.inc.map(k=>{const i=INC[k];return `<li class="inc"><small>${i.data} · ${i.tipo==="roubo"?"roubo de fundos":"vazamento / falha"}</small><b>${esc(i.titulo)}</b><span>${esc(i.resumo)}</span><span>Fontes: ${i.fontes.map(f=>`<a href="${f[1]}" target="_blank" rel="noopener">${esc(f[0])}</a>`).join(" · ")}</span></li>`}).join("");
+      h+=`<tr class="detail"><td colspan="${cols}">${ns?`<ul class="notes">${ns}</ul>`:""}${incs?`<ul>${incs}</ul>`:`<span style="color:var(--muted)">Nenhum incidente registrado nesta base.</span>`}</td></tr>`;
+    }
+  }
+  $("#tbl tbody").innerHTML=h;
+  $("#f-os").hidden=!cat.crit.some(c=>c[0]==="os");
+}
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest(".tab");if(!b)return;st.cat=b.dataset.id;st.aberto=null;try{localStorage.setItem("rx-tab",st.cat)}catch(e){}abas();render()});
+$("#q").addEventListener("input",e=>{st.q=e.target.value.trim().toLowerCase();render()});
+$("#f-os").addEventListener("click",e=>{st.os=!st.os;e.target.setAttribute("aria-pressed",st.os);render()});
+$("#f-roubo").addEventListener("click",e=>{st.semRoubo=!st.semRoubo;e.target.setAttribute("aria-pressed",st.semRoubo);render()});
+const toggle=tr=>{if(!tr||e_link)return;const k=tr.dataset.k;st.aberto=st.aberto===k?null:k;render()};
+let e_link=false;
+$("#tbl tbody").addEventListener("click",e=>{e_link=!!e.target.closest("a");toggle(e.target.closest("tr.row"))});
+$("#tbl tbody").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();e_link=false;toggle(e.target.closest("tr.row"))}});
+abas();render();
+</script>
+</body>
+</html>
